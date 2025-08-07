@@ -19,7 +19,9 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "vue": "^3.5.18"
+    "firebase": "^12.0.0",
+    "vue": "^3.5.18",
+    "vuefire": "^3.2.2"
   },
   "devDependencies": {
     "@prettier/plugin-oxc": "^0.0.4",
