@@ -19,9 +19,13 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@mdi/font": "^7.4.47",
     "firebase": "^12.0.0",
+    "suncalc": "^1.9.0",
+    "vite-plugin-vuetify": "^2.1.2",
     "vue": "^3.5.18",
-    "vuefire": "^3.2.2"
+    "vuefire": "^3.2.2",
+    "vuetify": "^3.9.4"
   },
   "devDependencies": {
     "@prettier/plugin-oxc": "^0.0.4",
