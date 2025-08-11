@@ -23,7 +23,7 @@ jobs:
           npm ci
           npx eslint . --format json -o eslint-report.json
 
-      # Upload ESLint results
+      # Upload ESLint results (artifact only; release upload comes later)
       - name: Upload ESLint report
         uses: actions/upload-artifact@v4
         with:
@@ -48,7 +48,7 @@ jobs:
       - name: Zip release artifact
         run: zip -r "dist-${{ env.UNIQUE_VERSION }}.zip" dist/
 
-      # Upload zipped build artifact
+      # Upload zipped build artifact (artifact only; release upload comes later)
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -60,6 +60,52 @@ jobs:
         uses: actions/attest-build-provenance@v1
         with:
           subject-path: "dist-${{ env.UNIQUE_VERSION }}.zip"
+
+      # Create GitHub release
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "release-${{ env.UNIQUE_VERSION }}"
+          release_name: "Release ${{ env.UNIQUE_VERSION }}"
+          draft: false
+          prerelease: false
+
+      # Upload zipped build artifact to release
+      - name: Upload Release Artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "dist-${{ env.UNIQUE_VERSION }}.zip"
+          asset_name: "dist-${{ env.UNIQUE_VERSION }}.zip"
+          asset_content_type: application/zip
+
+      # Upload attestation file to release
+      - name: Upload Attestation to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "attestation.json"
+          asset_name: "attestation.json"
+          asset_content_type: application/json
+        # Ensure attestation output file path matches your attestation step
+
+      # Upload ESLint report to release
+      - name: Upload ESLint Report to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "eslint-report.json"
+          asset_name: "eslint-report.json"
+          asset_content_type: application/json
 
       # Deploy to Firebase Hosting
       - uses: FirebaseExtended/action-hosting-deploy@v0
