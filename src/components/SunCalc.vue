@@ -65,7 +65,7 @@ onMounted(() => {
     daylightProgress.value = 100 - (elapsed / total) * 100
     loading.value = false
   } catch (e) {
-    error.value = 'Fehler bei der Berechnung.'
+    error.value = 'Fehler bei der Berechnung.' + e.message
     loading.value = false
   }
 })
