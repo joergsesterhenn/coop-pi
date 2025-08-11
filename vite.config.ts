@@ -13,9 +13,27 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('vue')) {
+            return 'vue'
+          }
+          if (id.includes('fire')) {
+            return 'fire'
+          }
+          if (id.includes('web')) {
+            return 'web'
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
   server: {
     host: '0.0.0.0',
-    port: 5173, // or any open port
+    port: 5173,
     allowedHosts: ['raspberrypi'],
   },
 })

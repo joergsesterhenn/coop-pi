@@ -7,5 +7,5 @@
 </template>
 
 <script setup lang="ts">
-import ChickenDashboard from './components/ChickenDashboard.vue'
+import ChickenDashboard from '@/components/ChickenDashboard.vue'
 </script>

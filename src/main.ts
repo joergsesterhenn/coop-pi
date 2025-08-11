@@ -7,16 +7,48 @@ import App from './App.vue'
 import { firebaseApp } from './firebase'
 
 import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
+import 'vuetify/styles'
+import { mdi } from 'vuetify/iconsets/mdi-svg'
+
+import {
+  VCard,
+  VRow,
+  VCol,
+  VApp,
+  VContainer,
+  VBtn,
+  VIcon,
+  VImg,
+  VSwitch,
+  VProgressCircular,
+  VCardText,
+  VProgressLinear,
+} from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import '@mdi/font/css/materialdesignicons.css'
 
 const vuetify = createVuetify({
   theme: {
     defaultTheme: 'dark',
   },
-  components,
+  components: {
+    VCard,
+    VRow,
+    VCol,
+    VApp,
+    VContainer,
+    VBtn,
+    VIcon,
+    VImg,
+    VSwitch,
+    VProgressCircular,
+    VProgressLinear,
+    VCardText,
+  },
   directives,
+  icons: {
+    defaultSet: 'mdi',
+    sets: { mdi },
+  },
 })
 
 const app = createApp(App).use(vuetify)

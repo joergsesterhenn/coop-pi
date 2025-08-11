@@ -6,7 +6,7 @@
     <v-row align="center" justify="center">
       <v-col>
         <v-btn color="blue" @click="moveDoor('up')" :disabled="open" class="fade-button">
-          <v-icon>mdi-arrow-up-bold</v-icon>
+          <v-icon :icon="mdiArrowUpBold" />
         </v-btn>
       </v-col>
       <v-col>
@@ -14,7 +14,7 @@
       </v-col>
       <v-col>
         <v-btn color="blue" @click="moveDoor('down')" :disabled="closed" class="fade-button">
-          <v-icon>mdi-arrow-down-bold</v-icon>
+          <v-icon :icon="mdiArrowDownBold" />
         </v-btn>
       </v-col>
     </v-row>
@@ -22,21 +22,16 @@
 </template>
 
 <script setup lang="ts">
+import { mdiArrowUpBold, mdiArrowDownBold } from '@mdi/js'
 import { ref, computed, onMounted } from 'vue'
 
 const doorStatus = ref<number>(0)
 
-const DoorStateLabels = [
-  'Unbekannt',
-  'Offen',
-  'Geschlossen',
-  'Öffnet...',
-  'Schließt...'
-]
+const DoorStateLabels = ['Unbekannt', 'Offen', 'Geschlossen', 'Öffnet...', 'Schließt...']
 
 const doorStatusText = computed(() => DoorStateLabels[doorStatus.value] ?? 'Fehler')
-const closed = computed(() => doorStatus.value==2)
-const open = computed(() => doorStatus.value==1)
+const closed = computed(() => doorStatus.value == 2)
+const open = computed(() => doorStatus.value == 1)
 
 async function fetchDoorState() {
   try {
@@ -56,7 +51,7 @@ onMounted(() => {
 })
 
 async function moveDoor(direction: 'up' | 'down') {
-  await fetch(`/door?direction=${direction}`, { method: 'POST' });
+  await fetch(`/door?direction=${direction}`, { method: 'POST' })
 }
 </script>
 <style scoped>
