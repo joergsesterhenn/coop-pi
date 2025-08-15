@@ -32,8 +32,8 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
   },
   server: {
-    host: '0.0.0.0',
-    port: 5173,
-    allowedHosts: ['raspberrypi'],
+    host: 'https://eifel.chickenkiller.com/',
+    port: 413,
+    allowedHosts: ['eifel.chickenkiller.com', 'localhost'],
   },
 })
