@@ -24,13 +24,14 @@
 import { onMounted, ref } from 'vue'
 import { mdiLightbulbOn, mdiLightbulbOff } from '@mdi/js'
 const lightOn = ref<boolean | undefined>(undefined)
+const apiBaseUrl: string = import.meta.env.VITE_API_BASE_URL
 
 const toggling = ref(false)
 
 async function toggleLight() {
   toggling.value = true
   try {
-    await fetch('/lights', { method: 'POST' })
+    await fetch(`${apiBaseUrl}/lights`, { method: 'POST' })
     await fetchLightState()
   } catch (e) {
     console.error('Toggle failed:', e)
@@ -40,7 +41,7 @@ async function toggleLight() {
 }
 
 async function fetchLightState() {
-  const res = await fetch('/light-state')
+  const res = await fetch(`${apiBaseUrl}/light-state`)
   const data = await res.json()
   lightOn.value = data.on
 }

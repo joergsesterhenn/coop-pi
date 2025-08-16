@@ -37,18 +37,19 @@
 import { onMounted, ref } from 'vue'
 
 const temp = ref({ inside: 0, outside: 0 })
+const apiBaseUrl: string = import.meta.env.VITE_API_BASE_URL
 
-async function fetchTemperature(){
-      const res = await fetch('/temperature')
-      const data = await res.json()
-      temp.value = {
-        inside: data.inside ?? 0,
-        outside: data.outside ?? 0,
-      }
+async function fetchTemperature() {
+  const res = await fetch(`${apiBaseUrl}/temperature`)
+  const data = await res.json()
+  temp.value = {
+    inside: data.inside ?? 0,
+    outside: data.outside ?? 0,
+  }
 }
 
 onMounted(async () => {
-   fetchTemperature()
-   setInterval(fetchTemperature, 30000)
+  fetchTemperature()
+  setInterval(fetchTemperature, 30000)
 })
 </script>
