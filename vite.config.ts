@@ -33,7 +33,7 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 5173,
-    allowedHosts: ['eifel.chickenkiller.com', 'localhost'],
+    port: 443,
+    allowedHosts: ['coop-pi.web.app', 'localhost'],
   },
 })
