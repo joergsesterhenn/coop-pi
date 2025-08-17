@@ -20,12 +20,11 @@
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",
-    "firebase": "^12.0.0",
+    "firebase": "^12.1.0",
     "suncalc": "^1.9.0",
-    "vite-plugin-vuetify": "^2.1.2",
     "vue": "^3.5.18",
     "vuefire": "^3.2.2",
-    "vuetify": "^3.9.4"
+    "vuetify": "^3.9.5"
   },
   "devDependencies": {
     "@prettier/plugin-oxc": "^0.0.4",
@@ -39,6 +38,7 @@
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.7.0",
+    "vite-plugin-vuetify": "^2.1.2",
     "eslint": "^9.31.0",
     "eslint-plugin-oxlint": "~1.8.0",
     "eslint-plugin-vue": "~10.3.0",
@@ -48,7 +48,7 @@
     "oxlint": "~1.8.0",
     "prettier": "3.6.2",
     "typescript": "~5.8.0",
-    "vite": "npm:rolldown-vite@latest",
+    "vite": "^7.x.x",
     "vite-plugin-vue-devtools": "^8.0.0",
     "vitest": "^3.2.4",
     "vue-tsc": "^3.0.4"
