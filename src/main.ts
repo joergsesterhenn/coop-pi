@@ -1,30 +1,27 @@
-import './assets/main.css'
-
 import { createApp } from 'vue'
 import { VueFire, VueFireAuth } from 'vuefire'
-import App from './App.vue'
-
-import { firebaseApp } from './firebase'
-
 import { createVuetify } from 'vuetify'
-import 'vuetify/styles'
-import { mdi } from 'vuetify/iconsets/mdi-svg'
-
 import {
-  VCard,
-  VRow,
-  VCol,
   VApp,
-  VContainer,
   VBtn,
+  VCard,
+  VCardText,
+  VCol,
+  VContainer,
   VIcon,
   VImg,
-  VSwitch,
+  VMain,
   VProgressCircular,
-  VCardText,
   VProgressLinear,
+  VRow,
+  VSwitch,
 } from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { mdi } from 'vuetify/iconsets/mdi-svg'
+import 'vuetify/styles'
+import App from './App.vue'
+import './assets/main.css'
+import { firebaseApp } from './firebase'
 
 const vuetify = createVuetify({
   theme: {
@@ -35,6 +32,7 @@ const vuetify = createVuetify({
     VRow,
     VCol,
     VApp,
+    VMain,
     VContainer,
     VBtn,
     VIcon,
@@ -53,12 +51,8 @@ const vuetify = createVuetify({
 
 const app = createApp(App).use(vuetify)
 app.use(VueFire, {
-  // imported above but could also just be created here
   firebaseApp,
-  modules: [
-    // we will see other modules later on
-    VueFireAuth(),
-  ],
+  modules: [VueFireAuth()],
 })
 
 app.mount('#app')

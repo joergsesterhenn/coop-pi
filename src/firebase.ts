@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection } from 'firebase/firestore'
+//import { getFirestore, collection } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth' // Import getAuth for authentication service
+import { GoogleAuthProvider } from 'firebase/auth'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyDMHHM4pxTEanltJAigf2pkAx9YXb5eQoE',
@@ -14,7 +16,11 @@ const firebaseConfig = {
 export const firebaseApp = initializeApp(firebaseConfig)
 
 // used for the firestore refs
-const db = getFirestore(firebaseApp)
+//const db = getFirestore(firebaseApp)
+
+// Get a reference to the Auth service
+export const auth = getAuth(firebaseApp)
 
 // here we can export reusable database references
-export const todosRef = collection(db, 'todos')
+//export const todosRef = collection(db, 'todos')
+//export const googleAuthProvider = new GoogleAuthProvider()

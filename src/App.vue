@@ -1,11 +1,11 @@
 <template>
   <v-app>
     <v-main>
-      <ChickenDashboard />
+      <AuthComponent />
     </v-main>
   </v-app>
 </template>
 
 <script setup lang="ts">
-import ChickenDashboard from '@/components/ChickenDashboard.vue'
+import AuthComponent from '@/components/AuthComponent.vue'
 </script>
