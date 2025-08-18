@@ -22,9 +22,9 @@
 </template>
 
 <script setup lang="ts">
+import { authenticatedFetch } from '@/auth'
 import { mdiArrowUpBold, mdiArrowDownBold } from '@mdi/js'
 import { ref, computed, onMounted } from 'vue'
-const apiBaseUrl: string = import.meta.env.VITE_API_BASE_URL
 
 const doorStatus = ref<number>(0)
 
@@ -36,7 +36,7 @@ const open = computed(() => doorStatus.value == 1)
 
 async function fetchDoorState() {
   try {
-    const res = await fetch(`${apiBaseUrl}/door-state`)
+    const res = await authenticatedFetch<Response>('/door-state')
     const data = await res.json()
     doorStatus.value = data.status
   } catch (err) {
@@ -52,7 +52,7 @@ onMounted(() => {
 })
 
 async function moveDoor(direction: 'up' | 'down') {
-  await fetch(`${apiBaseUrl}/door?direction=${direction}`, { method: 'POST' })
+  await authenticatedFetch<Response>(`/door?direction=${direction}`, { method: 'POST' })
 }
 </script>
 <style scoped>
