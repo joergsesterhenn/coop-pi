@@ -2,12 +2,12 @@
   <v-app>
     <v-container>
       <h1 class="text-center">🐔 Chicken Pi ⚙️</h1>
-      <v-card v-if="currentUser === undefined" class="pa-4 mt-4">
+      <v-card v-if="getCurrentUser() === undefined" class="pa-4 mt-4">
         <p>Lade Benutzerdaten...</p>
       </v-card>
       <v-card v-if="isLoggedIn" class="pa-4 mt-4">
         <p>
-          Hallo, <strong>{{ currentUser?.displayName }}</strong
+          Hallo, <strong>{{ user?.displayName }}</strong
           >!
         </p>
         <v-btn color="primary" @click="handleSignOut">Abmelden</v-btn>
@@ -34,15 +34,17 @@ import ChickenDashboard from '@/components/ChickenDashboard.vue'
 import {
   isLoggedIn,
   signInWithGoogle,
-  currentUser,
+  getCurrentUser,
   handleSignOut,
   isAuthorizedUser,
   allowedUsersFromDB,
 } from '@/auth'
 import { watchEffect } from 'vue'
 
-watchEffect(() => {
-  console.log('Current user:', currentUser.value?.uid)
+const user = await getCurrentUser()
+
+watchEffect(async () => {
+  console.log('Current user:', user?.uid)
   console.log('Allowed users from DB:', allowedUsersFromDB.value)
   console.log('Is authorized:', isAuthorizedUser.value)
 })
