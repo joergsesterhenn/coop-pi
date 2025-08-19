@@ -27,20 +27,20 @@
   </v-card>
 </template>
 <script setup lang="ts">
+import { authenticatedFetch, BASE_BACKEND_URL } from '@/auth'
 import { onMounted, ref } from 'vue'
 
 const imageUrl = ref('')
 const captureLoading = ref(false)
-const apiBaseUrl: string = import.meta.env.VITE_API_BASE_URL
 
 async function fetchImage() {
   const timestamp = new Date().getTime()
-  imageUrl.value = `${apiBaseUrl}/latest-image?_=${timestamp}`
+  imageUrl.value = `${BASE_BACKEND_URL}/latest-image?_=${timestamp}`
 }
 
 async function captureImage() {
   captureLoading.value = true
-  await fetch(`${apiBaseUrl}/capture`, { method: 'POST' })
+  await authenticatedFetch<Response>('/capture', { method: 'POST' })
   await fetchImage()
   captureLoading.value = false
 }
