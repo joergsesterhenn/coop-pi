@@ -1,78 +1,63 @@
 import { signInWithPopup, signOut } from 'firebase/auth'
 import { GoogleAuthProvider } from 'firebase/auth'
-import type { Auth, User } from 'firebase/auth' // Import the User type
-import { getDatabase, ref as dbRef } from 'firebase/database'
-import { computed, watch, type Ref } from 'vue'
-import { useCurrentUser, useFirebaseAuth, useDatabaseObject } from 'vuefire'
-import { firebaseApp } from './firebase'
+import { useAuth } from '@/composables/useAuth'
 
 export const BASE_BACKEND_URL: string = import.meta.env.VITE_API_BASE_URL
 
-export const googleAuthProvider = new GoogleAuthProvider()
-const auth: Auth | null = useFirebaseAuth()
-const currentUser: Ref<User | undefined | null> = useCurrentUser()
-export const database = getDatabase(firebaseApp)
-export const allowedUsersFromDB: Ref<Record<string, boolean> | null | undefined> =
-  useDatabaseObject<Record<string, boolean>>(dbRef(database, 'allowed_users'))
-
-export const isLoggedIn = computed<boolean>(() => !!currentUser.value)
-export const isAuthorizedUser = computed<boolean>(() => {
-  if (
-    currentUser.value === undefined ||
-    currentUser.value === null ||
-    allowedUsersFromDB.value === undefined ||
-    allowedUsersFromDB.value === null
-  ) {
-    return false // Still loading or not authorized (no logged-in user or allowed users data not ready)
-  }
-  const userUid: string = currentUser.value.uid
-  const allowedUsersMap: Record<string, boolean> = allowedUsersFromDB.value
-  return !!allowedUsersMap[userUid]
-})
-
 /**
- * Handles authenticated Calls.
+ * Performs a fetch to your FastAPI backend with Firebase auth.
+ * @template T  Expected response data shape
+ * @param endpoint  Path under your base URL (no leading slash)
+ * @param options   Standard Fetch API options
+ * @returns         Parsed JSON as type T
  */
-export async function authenticatedFetch<T>( // Use a generic type T for the expected response data
+export async function authenticatedFetch<T>(
   endpoint: string,
-  options: RequestInit = {}, // Use RequestInit for fetch options
+  options: RequestInit = {},
 ): Promise<T> {
-  const user = await getCurrentUser() // Wait for the user to be available
+  const { getCurrentUserOnce, isAuthorizedUser } = useAuth()
 
-  if (user == undefined || user == null || !isAuthorizedUser.value) {
-    console.warn('User not authorized. Cannot make API call to', endpoint)
+  // 1. Wait for current user
+  const user = await getCurrentUserOnce()
+
+  // 2. Check login + authorization
+  if (!user || !isAuthorizedUser.value) {
+    console.warn('User not authorized. Cannot call API:', endpoint)
     throw new Error('User not authorized')
-  } else {
-    try {
-      const idToken: string = await user.getIdToken()
+  }
 
-      const headers: HeadersInit = {
-        // Use HeadersInit for headers
-        ...options.headers,
-        Authorization: `Bearer ${idToken}`,
-        'Content-Type': 'application/json',
-      }
+  try {
+    // 3. Retrieve ID token (uses cache unless expired)
+    const idToken = await user.getIdToken()
 
-      const response: Response = await fetch(`${BASE_BACKEND_URL}/${endpoint}`, {
-        ...options,
-        headers,
-      })
-
-      if (response.ok) {
-        const data: T = await response.json()
-        return data
-      } else {
-        console.error('Backend request failed:', response.status, response.statusText)
-        throw new Error(`Backend request failed: ${response.statusText}`)
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error('Error during authenticated fetch:', error.message)
-      } else {
-        console.error('An unknown error occurred during authenticated fetch:', error)
-      }
-      throw error
+    // 4. Build headers (merge existing ones)
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
+      ...options.headers,
     }
+
+    // 5. Execute fetch against full backend URL
+    const response = await fetch(`${BASE_BACKEND_URL}${endpoint}`, {
+      ...options,
+      headers,
+    })
+
+    // 6. Handle non-2xx errors
+    if (!response.ok) {
+      console.error('Backend request failed:', response.status, response.statusText)
+      throw new Error(`Backend error: ${response.status} ${response.statusText}`)
+    }
+
+    // 7. Parse JSON into T
+    return (await response.json()) as T
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error('Error during authenticatedFetch:', err.message)
+      throw err
+    }
+    console.error('Unknown error during authenticatedFetch:', err)
+    throw new Error('Unknown fetch error')
   }
 }
 
@@ -80,6 +65,7 @@ export async function authenticatedFetch<T>( // Use a generic type T for the exp
  * Handles the Google Sign-In process.
  */
 export const signInWithGoogle = async () => {
+  const { auth } = useAuth()
   if (!auth) return
   const provider = new GoogleAuthProvider()
   try {
@@ -98,6 +84,7 @@ export const signInWithGoogle = async () => {
  * Handles the user signing out.
  */
 export const handleSignOut = async () => {
+  const { auth } = useAuth()
   if (!auth) return
   try {
     await signOut(auth)
@@ -109,23 +96,4 @@ export const handleSignOut = async () => {
       console.error('An unknown error occurred during sign-out:', error)
     }
   }
-}
-/**
- * Returns the current user, waiting for it to be available if necessary.
- */
-export const getCurrentUser = (): Promise<User | undefined | null> => {
-  return new Promise((resolve) => {
-    // If currentUser is already defined, resolve immediately
-    if (currentUser.value !== undefined) {
-      resolve(currentUser.value)
-    } else {
-      // Watch for changes in currentUser and resolve when it's defined
-      const stopWatch = watch(currentUser, (newValue) => {
-        if (newValue !== undefined) {
-          stopWatch() // Stop watching once the user is available
-          resolve(newValue)
-        }
-      })
-    }
-  })
 }

@@ -2,7 +2,7 @@
   <v-app>
     <v-container>
       <h1 class="text-center">🐔 Chicken Pi ⚙️</h1>
-      <v-card v-if="getCurrentUser() === undefined" class="pa-4 mt-4">
+      <v-card v-if="currentUser === undefined" class="pa-4 mt-4">
         <p>Lade Benutzerdaten...</p>
       </v-card>
       <v-card v-if="isLoggedIn" class="pa-4 mt-4">
@@ -30,22 +30,22 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import ChickenDashboard from '@/components/ChickenDashboard.vue'
-import {
-  isLoggedIn,
-  signInWithGoogle,
-  getCurrentUser,
-  handleSignOut,
-  isAuthorizedUser,
-  allowedUsersFromDB,
-} from '@/auth'
-import { watchEffect } from 'vue'
+import { useAuth } from '@/composables/useAuth.ts'
+import { signInWithPopup, signOut, GoogleAuthProvider } from 'firebase/auth'
 
-const user = await getCurrentUser()
+const { auth, currentUser, isLoggedIn, isAuthorizedUser, getCurrentUserOnce } = useAuth()
 
-watchEffect(async () => {
-  console.log('Current user:', user?.uid)
-  console.log('Allowed users from DB:', allowedUsersFromDB.value)
-  console.log('Is authorized:', isAuthorizedUser.value)
+const user = ref(currentUser.value) // initially undefined
+
+// Load the initial user when the component mounts
+onMounted(async () => {
+  user.value = await getCurrentUserOnce()
 })
+
+// your Google handlers
+const provider = new GoogleAuthProvider()
+const signInWithGoogle = () => signInWithPopup(auth, provider)
+const handleSignOut = () => signOut(auth)
 </script>
