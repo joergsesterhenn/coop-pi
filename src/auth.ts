@@ -8,48 +8,42 @@ export const BASE_BACKEND_URL: string = import.meta.env.VITE_API_BASE_URL
  * Performs a fetch to your FastAPI backend with Firebase auth.
  * @template T  Expected response data shape
  * @param endpoint  Path under your base URL (no leading slash)
+ * @param token The firebase auth token
  * @param options   Standard Fetch API options
  * @returns         Parsed JSON as type T
  */
 export async function authenticatedFetch<T>(
   endpoint: string,
+  token: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const { getCurrentUserOnce, isAuthorizedUser } = useAuth()
-
-  // 1. Wait for current user
-  const user = await getCurrentUserOnce()
-
-  // 2. Check login + authorization
-  if (!user || !isAuthorizedUser.value) {
-    console.warn('User not authorized. Cannot call API:', endpoint)
+  // 1. Check for token
+  if (!token) {
+    console.warn('No auth token provided. Cannot call API:', endpoint)
     throw new Error('User not authorized')
   }
 
   try {
-    // 3. Retrieve ID token (uses cache unless expired)
-    const idToken = await user.getIdToken()
-
-    // 4. Build headers (merge existing ones)
+    // 2. Build headers (merge existing ones)
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
+      Authorization: `Bearer ${token}`,
       ...options.headers,
     }
 
-    // 5. Execute fetch against full backend URL
+    // 3. Execute fetch against full backend URL
     const response = await fetch(`${BASE_BACKEND_URL}${endpoint}`, {
       ...options,
       headers,
     })
 
-    // 6. Handle non-2xx errors
+    // 4. Handle non-2xx errors
     if (!response.ok) {
       console.error('Backend request failed:', response.status, response.statusText)
       throw new Error(`Backend error: ${response.status} ${response.statusText}`)
     }
 
-    // 7. Parse JSON into T
+    // 5. Parse JSON into T
     return (await response.json()) as T
   } catch (err: unknown) {
     if (err instanceof Error) {

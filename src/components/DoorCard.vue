@@ -10,7 +10,7 @@
         </v-btn>
       </v-col>
       <v-col>
-        <div class="text-body-1 font-weight-medium">{{ doorStatusText }}</div>
+        <div class="text-body-1 font-weight-medium" data-testid="door-status-text">{{ doorStatusText }}</div>
       </v-col>
       <v-col>
         <v-btn color="blue" @click="moveDoor('down')" :disabled="closed" class="fade-button">
@@ -23,8 +23,11 @@
 
 <script setup lang="ts">
 import { authenticatedFetch } from '@/auth'
+import { useAuth } from '@/composables/useAuth'
 import { mdiArrowUpBold, mdiArrowDownBold } from '@mdi/js'
 import { ref, computed, onMounted } from 'vue'
+
+const { currentUser } = useAuth()
 
 const doorStatus = ref<number>(0)
 
@@ -36,8 +39,12 @@ const open = computed(() => doorStatus.value == 1)
 
 async function fetchDoorState() {
   try {
-    const res = await authenticatedFetch<Response>('/door-state')
-    const data = await res.json()
+    if (!currentUser.value) {
+      doorStatus.value = 0
+      return
+    }
+    const token = await currentUser.value.getIdToken()
+    const data = await authenticatedFetch<{ status: number }>('/door-state', token)
     doorStatus.value = data.status
   } catch (err) {
     console.error('Fehler beim Abrufen des Türstatus:', err)
@@ -52,7 +59,17 @@ onMounted(() => {
 })
 
 async function moveDoor(direction: 'up' | 'down') {
-  await authenticatedFetch<Response>(`/door?direction=${direction}`, { method: 'POST' })
+  try {
+    if (!currentUser.value) {
+      console.error('Cannot move door, user not logged in.')
+      return
+    }
+    const token = await currentUser.value.getIdToken()
+    await authenticatedFetch(`/door?direction=${direction}`, token, { method: 'POST' })
+    await fetchDoorState()
+  } catch (err) {
+    console.error(`Error moving door ${direction}:`, err)
+  }
 }
 </script>
 <style scoped>

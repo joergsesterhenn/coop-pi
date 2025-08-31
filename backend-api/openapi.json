@@ -1,0 +1,143 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "FastAPI", "version": "0.1.0" },
+  "paths": {
+    "/door": {
+      "post": {
+        "summary": "Coop Door",
+        "operationId": "coop_door_door_post",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Direction" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/door-state": {
+      "get": {
+        "summary": "Door State",
+        "operationId": "door_state_door_state_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/lights": {
+      "post": {
+        "summary": "Lights",
+        "operationId": "lights_lights_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/light-state": {
+      "get": {
+        "summary": "Light State",
+        "operationId": "light_state_light_state_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/capture": {
+      "post": {
+        "summary": "Capture Image",
+        "operationId": "capture_image_capture_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/temperature": {
+      "get": {
+        "summary": "Read Temperature",
+        "operationId": "read_temperature_temperature_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/latest-image": {
+      "get": {
+        "summary": "Latest Image",
+        "operationId": "latest_image_latest_image_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": { "HTTPBearer": { "type": "http", "scheme": "bearer" } }
+  }
+}
