@@ -23,15 +23,19 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { mdiLightbulbOn, mdiLightbulbOff } from '@mdi/js'
-import { authenticatedFetch } from '@/auth'
-const lightOn = ref<boolean | undefined>(undefined)
+import { authenticatedFetch } from '../auth'
+import { useAuth } from '../composables/useAuth'
 
+const { currentUser } = useAuth()
+const lightOn = ref<boolean | undefined>(undefined)
 const toggling = ref(false)
 
 async function toggleLight() {
   toggling.value = true
   try {
-    await authenticatedFetch<Response>('/lights', { method: 'POST' })
+    const token = await currentUser.value?.getIdToken()
+    if (!token) throw new Error('User not authenticated')
+    await authenticatedFetch('/lights', token, { method: 'POST' })
     await fetchLightState()
   } catch (e) {
     console.error('Toggle failed:', e)
@@ -41,9 +45,15 @@ async function toggleLight() {
 }
 
 async function fetchLightState() {
-  const res = await authenticatedFetch<Response>('/light-state')
-  const data = await res.json()
-  lightOn.value = data.on
+  try {
+    const token = await currentUser.value?.getIdToken()
+    if (!token) throw new Error('User not authenticated')
+    const data = await authenticatedFetch<{ on: boolean }>('/light-state', token)
+    lightOn.value = data.on
+  } catch (e) {
+    console.error('Failed to fetch light state:', e)
+    lightOn.value = undefined
+  }
 }
 
 onMounted(async () => {

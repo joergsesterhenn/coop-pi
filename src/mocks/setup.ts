@@ -1,23 +1,32 @@
+import 'vuetify/styles'
+import { beforeAll, afterEach, afterAll, vi } from 'vitest'
 import { server } from './server'
 import { config } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
-import { afterAll, beforeAll, afterEach } from 'vitest'
 
-const vuetify = createVuetify({
-  components,
-  directives,
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+
+// Polyfill matchMedia
+if (!window.matchMedia) {
+  window.matchMedia = vi.fn().mockImplementation((query) => ({
+    matches: false, // force all queries to "not match"
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }))
+}
+
+export const vuetify = createVuetify({
+  display: {
+    thresholds: { xs: 0, sm: 600, md: 960, lg: 1280, xl: 1920 },
+    mobileBreakpoint: 'sm', // Vuetify will compute `mobile`
+  },
 })
 
-config.global.plugins = [[vuetify]]
-
-// Establish API mocking before all tests.
-beforeAll(() => server.listen())
-
-// Reset any request handlers that we may add during the tests,
-// so they don't affect other tests.
-afterEach(() => server.resetHandlers())
-
-// Clean up after the tests are finished.
-afterAll(() => server.close())
+config.global.plugins.push(vuetify)

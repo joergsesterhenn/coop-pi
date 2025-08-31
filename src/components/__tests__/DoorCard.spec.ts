@@ -4,6 +4,7 @@ import { mount } from '@vue/test-utils';
 import DoorCard from '../DoorCard.vue';
 import { server } from '../../mocks/server';
 import { http, HttpResponse } from 'msw';
+import { vuetify } from '../../mocks/setup';
 
 // Mock the useAuth composable to prevent VueFire errors in tests
 vi.mock('../../composables/useAuth', () => ({
@@ -29,6 +30,14 @@ describe('DoorCard', () => {
     vi.useRealTimers();
   });
 
+  const mountComponent = () => {
+    return mount(DoorCard, {
+      global: {
+        plugins: [vuetify],
+      },
+    });
+  };
+
   it('renders "Offen" when API returns status 1', async () => {
     // Arrange: Set up the mock response BEFORE mounting the component
     server.use(
@@ -38,7 +47,7 @@ describe('DoorCard', () => {
     );
 
     // Act: Mount the component, which triggers the API call
-    const wrapper = mount(DoorCard);
+    const wrapper = mountComponent();
     
     // Assert: Wait for the component to update after the fetch
     await vi.dynamicImportSettled();
@@ -56,7 +65,7 @@ describe('DoorCard', () => {
     );
 
     // Act
-    const wrapper = mount(DoorCard);
+    const wrapper = mountComponent();
 
     // Assert
     await vi.dynamicImportSettled();
@@ -75,7 +84,7 @@ describe('DoorCard', () => {
     );
 
     // Act
-    const wrapper = mount(DoorCard);
+    const wrapper = mountComponent();
 
     // Assert
     await vi.dynamicImportSettled();
