@@ -5,14 +5,14 @@
     </template>
     <v-switch
       v-if="lightOn !== undefined"
-      v-model="lightOn"
+      :model-value="lightOn"
       :label="lightOn ? 'Licht an' : 'Licht aus'"
       inset
       color="yellow-darken-3"
       hide-details
       :loading="toggling"
       :disabled="toggling"
-      @change="toggleLight"
+      @click="toggleLight"
     >
       <template #thumb>
         <v-icon :icon="lightOn ? mdiLightbulbOn : mdiLightbulbOff" />

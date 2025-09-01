@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { server } from '../../mocks/server'
-import { http, HttpResponse } from 'msw'
 
 // Mock the useAuth composable
 vi.mock('../../composables/useAuth', () => ({
@@ -15,12 +13,18 @@ vi.mock('../../composables/useAuth', () => ({
   }),
 }))
 
+// Mock the authenticatedFetch function
+vi.mock('../../auth', () => ({
+  authenticatedFetch: vi.fn(),
+}))
+
 describe('LightCard', () => {
-  afterEach(() => {
-    server.resetHandlers()
-    vi.restoreAllMocks()
-  })
-  beforeEach(() => {
+  let mockAuthenticatedFetch: ReturnType<typeof vi.fn>
+
+  beforeEach(async () => {
+    // Get the mocked function
+    mockAuthenticatedFetch = vi.mocked((await import('../../auth')).authenticatedFetch)
+
     window.matchMedia = vi.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
@@ -33,6 +37,10 @@ describe('LightCard', () => {
     }))
   })
 
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   const mountComponent = async () => {
     // dynamically import AFTER setupFiles ensure polyfills and Vuetify are applied
     const { default: LightCard } = await import('../LightCard.vue')
@@ -40,56 +48,75 @@ describe('LightCard', () => {
   }
 
   it('fetches and displays the initial light state as On', async () => {
-    server.use(http.get('*/light-state', () => HttpResponse.json({ on: true })))
+    mockAuthenticatedFetch.mockResolvedValue({ on: true })
+
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht an')
   })
 
   it('fetches and displays the initial light state as Off', async () => {
-    server.use(http.get('*/light-state', () => HttpResponse.json({ on: false })))
+    mockAuthenticatedFetch.mockResolvedValue({ on: false })
+
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht aus')
   })
 
   it('toggles the light from Off to On', async () => {
-    // initial state Off
-    server.use(http.get('*/light-state', () => HttpResponse.json({ on: false })))
+    // Mock initial state fetch
+    mockAuthenticatedFetch
+      .mockResolvedValueOnce({ on: false }) // Initial state
+      .mockResolvedValueOnce(null) // POST /lights response
+      .mockResolvedValueOnce({ on: true }) // Updated state fetch
+
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht aus')
 
-    // toggle response
-    server.use(
-      http.post('*/lights', () => new HttpResponse(null, { status: 200 })),
-      http.get('*/light-state', () => HttpResponse.json({ on: true })),
-    )
-
+    // Click the switch
     await wrapper.find('.v-switch input').trigger('click')
+
+    // Wait for the toggle operation to complete and state to update
     await vi.dynamicImportSettled()
+    await wrapper.vm.$nextTick()
+
+    // Wait a bit more for the async operations to complete
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    // Debug: Log the actual state
+    console.log('Switch label text:', wrapper.find('.v-switch .v-label').text())
+
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht an')
   })
 
   it('toggles the light from On to Off', async () => {
-    server.use(http.get('*/light-state', () => HttpResponse.json({ on: true })))
+    // Mock initial state fetch
+    mockAuthenticatedFetch
+      .mockResolvedValueOnce({ on: true }) // Initial state
+      .mockResolvedValueOnce(null) // POST /lights response
+      .mockResolvedValueOnce({ on: false }) // Updated state fetch
+
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht an')
 
-    server.use(
-      http.post('*/lights', () => new HttpResponse(null, { status: 200 })),
-      http.get('*/light-state', () => HttpResponse.json({ on: false })),
-    )
-
+    // Click the switch
     await wrapper.find('.v-switch input').trigger('click')
+
+    // Wait for the toggle operation to complete and state to update
     await vi.dynamicImportSettled()
+    await wrapper.vm.$nextTick()
+
+    // Wait a bit more for the async operations to complete
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht aus')
   })
 
   it('handles API error during initial fetch and does not render switch', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    server.use(http.get('*/light-state', () => new HttpResponse(null, { status: 500 })))
+    mockAuthenticatedFetch.mockRejectedValue(new Error('API Error'))
 
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
@@ -100,14 +127,24 @@ describe('LightCard', () => {
   it('handles API error when toggling the switch and maintains state', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    server.use(http.get('*/light-state', () => HttpResponse.json({ on: false })))
+    // Mock initial state fetch
+    mockAuthenticatedFetch
+      .mockResolvedValueOnce({ on: false }) // Initial state
+      .mockRejectedValueOnce(new Error('Toggle failed')) // POST /lights error
+
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht aus')
 
-    server.use(http.post('*/lights', () => new HttpResponse(null, { status: 500 })))
+    // Click the switch
     await wrapper.find('.v-switch input').trigger('click')
+
+    // Wait for the error to be handled
     await vi.dynamicImportSettled()
+    await wrapper.vm.$nextTick()
+
+    // Wait a bit more for the async operations to complete
+    await new Promise((resolve) => setTimeout(resolve, 100))
 
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht aus')
     expect(consoleErrorSpy).toHaveBeenCalledWith('Toggle failed:', expect.any(Error))
