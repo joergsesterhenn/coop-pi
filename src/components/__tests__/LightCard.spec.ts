@@ -20,7 +20,7 @@ describe('LightCard', () => {
     server.resetHandlers()
     vi.restoreAllMocks()
   })
-  
+
   beforeEach(() => {
     window.matchMedia = vi.fn().mockImplementation((query) => ({
       matches: false,
@@ -57,7 +57,7 @@ describe('LightCard', () => {
   it('toggles the light from Off to On', async () => {
     // Set up initial state handler
     server.use(http.get('*/light-state', () => HttpResponse.json({ on: false })))
-    
+
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht aus')
@@ -70,24 +70,24 @@ describe('LightCard', () => {
 
     // Click the switch
     await wrapper.find('.v-switch input').trigger('click')
-    
+
     // Wait for the toggle operation to complete and state to update
     await vi.dynamicImportSettled()
     await wrapper.vm.$nextTick()
-    
+
     // Wait a bit more for the async operations to complete
     await new Promise((resolve) => setTimeout(resolve, 100))
-    
+
     // Debug: Log the actual state
     console.log('Switch label text:', wrapper.find('.v-switch .v-label').text())
-    
+
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht an')
   })
 
   it('toggles the light from On to Off', async () => {
     // Set up initial state handler
     server.use(http.get('*/light-state', () => HttpResponse.json({ on: true })))
-    
+
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht an')
@@ -100,14 +100,14 @@ describe('LightCard', () => {
 
     // Click the switch
     await wrapper.find('.v-switch input').trigger('click')
-    
+
     // Wait for the toggle operation to complete and state to update
     await vi.dynamicImportSettled()
     await wrapper.vm.$nextTick()
-    
+
     // Wait a bit more for the async operations to complete
     await new Promise((resolve) => setTimeout(resolve, 100))
-    
+
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht aus')
   })
 
@@ -126,21 +126,21 @@ describe('LightCard', () => {
 
     // Set up initial state handler
     server.use(http.get('*/light-state', () => HttpResponse.json({ on: false })))
-    
+
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht aus')
 
     // Set up error handler for the toggle request
     server.use(http.post('*/lights', () => new HttpResponse(null, { status: 500 })))
-    
+
     // Click the switch
     await wrapper.find('.v-switch input').trigger('click')
-    
+
     // Wait for the error to be handled
     await vi.dynamicImportSettled()
     await wrapper.vm.$nextTick()
-    
+
     // Wait a bit more for the async operations to complete
     await new Promise((resolve) => setTimeout(resolve, 100))
 
