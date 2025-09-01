@@ -27,7 +27,7 @@
   </v-card>
 </template>
 <script setup lang="ts">
-import { authenticatedFetch, BASE_BACKEND_URL } from '@/auth'
+import { authenticatedFetch } from '@/auth'
 import { onMounted, ref } from 'vue'
 
 const imageUrl = ref('')
@@ -35,7 +35,17 @@ const captureLoading = ref(false)
 
 async function fetchImage() {
   const timestamp = new Date().getTime()
-  imageUrl.value = `${BASE_BACKEND_URL}/latest-image?_=${timestamp}`
+  try {
+    const data = await authenticatedFetch<{ imageUrl?: string }>(`/latest-image?_=${timestamp}`, {
+      method: 'GET',
+    })
+    if (data.imageUrl) {
+      imageUrl.value = data.imageUrl
+    }
+  } catch (error) {
+    console.error('Failed to fetch image:', error)
+    imageUrl.value = ''
+  }
 }
 
 async function captureImage() {

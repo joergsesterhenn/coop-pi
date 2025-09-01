@@ -17,10 +17,28 @@ if (!window.matchMedia) {
     addListener: vi.fn(),
     removeListener: vi.fn(),
     addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   }))
 }
+
+// Polyfill ResizeObserver - always mock it completely
+const mockResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}))
+
+// Override ResizeObserver globally
+Object.defineProperty(window, 'ResizeObserver', {
+  writable: true,
+  value: mockResizeObserver,
+})
+
+// Also override the global ResizeObserver
+Object.defineProperty(global, 'ResizeObserver', {
+  writable: true,
+  value: mockResizeObserver,
+})
 
 export const vuetify = createVuetify({
   display: {

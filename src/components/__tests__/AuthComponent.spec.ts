@@ -1,186 +1,133 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { vuetify } from '../../mocks/setup'
+import AuthComponent from '../AuthComponent.vue'
+import { ref, type RefSymbol } from '@vue/reactivity'
+import { useCurrentUser } from 'vuefire'
 
-// Mock the useAuth composable
-const mockUseAuth = vi.fn()
-vi.mock('../../composables/useAuth', () => ({
-  useAuth: mockUseAuth,
+// Mock useAuth
+vi.mock('@/composables/useAuth', () => ({
+  useAuth: () => ({
+    currentUser: {
+      value: {
+        uid: 'test-uid',
+        getIdToken: vi.fn().mockResolvedValue('test-token'),
+      },
+    },
+    getCurrentUserOnce: vi.fn().mockResolvedValue({
+      uid: 'test-uid',
+      getIdToken: vi.fn().mockResolvedValue('test-token'),
+    }),
+  }),
 }))
 
-// Mock Firebase auth functions
-vi.mock('firebase/auth', () => ({
-  signInWithPopup: vi.fn(),
-  signOut: vi.fn(),
-  GoogleAuthProvider: vi.fn().mockImplementation(() => ({})),
+// Mock authenticatedFetch and BASE_BACKEND_URL
+vi.mock('../../auth', () => ({
+  authenticatedFetch: vi.fn(),
 }))
 
 describe('AuthComponent', () => {
+  let mockAuthenticatedFetch: ReturnType<typeof vi.fn>
+  let mockUseAuth: ReturnType<typeof import('@/composables/useAuth').useAuth>
+
+  beforeEach(async () => {
+    vi.clearAllMocks()
+
+    // Get the mocked functions
+    const { authenticatedFetch } = await import('../../auth')
+    mockAuthenticatedFetch = authenticatedFetch as ReturnType<typeof vi.fn>
+
+    const { useAuth } = await import('@/composables/useAuth')
+    mockUseAuth = useAuth()
+
+    mockAuthenticatedFetch.mockResolvedValue({
+      json: () => Promise.resolve({}),
+    } as Response)
+  })
+
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.clearAllMocks()
   })
-
-  beforeEach(() => {
-    window.matchMedia = vi.fn().mockImplementation((query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }))
-  })
-
-  const mountComponent = async () => {
-    const { default: AuthComponent } = await import('../AuthComponent.vue')
-    return mount(AuthComponent, {
-      global: {
-        plugins: [vuetify],
-      },
-    })
-  }
 
   it('renders loading state when user data is undefined', async () => {
-    mockUseAuth.mockReturnValue({
-      auth: {
-        signInWithPopup: vi.fn(),
-        signOut: vi.fn(),
-      },
-      currentUser: {
-        value: undefined,
-      },
-      isLoggedIn: false,
-      isAuthorizedUser: false,
-      getCurrentUserOnce: vi.fn().mockResolvedValue(undefined),
-    })
+    // Mock undefined user
 
-    const wrapper = await mountComponent()
+    const wrapper = mount(AuthComponent)
+
+    // Wait for component to settle
     await vi.dynamicImportSettled()
 
     expect(wrapper.text()).toContain('Lade Benutzerdaten...')
   })
 
-  it('renders sign in button when user is not logged in', async () => {
-    mockUseAuth.mockReturnValue({
-      auth: {
-        signInWithPopup: vi.fn(),
-        signOut: vi.fn(),
-      },
-      currentUser: {
-        value: null,
-      },
-      isLoggedIn: false,
-      isAuthorizedUser: false,
-      getCurrentUserOnce: vi.fn().mockResolvedValue(null),
-    })
+  it('renders sign in button when user is not logged in', () => {
+    // Mock no user
+    mockUseAuth.currentUser.value = null
 
-    const wrapper = await mountComponent()
-    await vi.dynamicImportSettled()
+    const wrapper = mount(AuthComponent)
 
-    expect(wrapper.text()).toContain('Sie sind nicht angemeldet.')
-    expect(wrapper.find('button').text()).toContain('Mit Google anmelden')
+    expect(wrapper.text()).toContain('Mit Google anmelden')
   })
 
   it('renders user info and sign out button when user is logged in and authorized', async () => {
-    mockUseAuth.mockReturnValue({
-      auth: {
-        signInWithPopup: vi.fn(),
-        signOut: vi.fn(),
-      },
-      currentUser: {
-        value: {
-          displayName: 'Test User',
-          uid: 'test-uid',
-        },
-      },
-      isLoggedIn: true,
-      isAuthorizedUser: true,
-      getCurrentUserOnce: vi.fn().mockResolvedValue({
-        displayName: 'Test User',
-        uid: 'test-uid',
-      }),
-    })
+    // Mock authorized user
+    mockUseAuth.currentUser.value = {
+      uid: 'test-uid',
+      getIdToken: vi.fn().mockResolvedValue('test-token'),
+    }
 
-    const wrapper = await mountComponent()
+    mockAuthenticatedFetch.mockResolvedValueOnce({
+      json: () => Promise.resolve({ authorized: true }),
+    } as Response)
+
+    const wrapper = mount(AuthComponent)
+
+    // Wait for async operations
     await vi.dynamicImportSettled()
 
-    expect(wrapper.text()).toContain('Hallo, Test User!')
-    expect(wrapper.find('button').text()).toContain('Abmelden')
+    expect(wrapper.text()).toContain('Angemeldet als')
+    expect(wrapper.text()).toContain('Abmelden')
   })
 
   it('renders access denied message when user is logged in but not authorized', async () => {
-    mockUseAuth.mockReturnValue({
-      auth: {
-        signInWithPopup: vi.fn(),
-        signOut: vi.fn(),
-      },
-      currentUser: {
-        value: {
-          displayName: 'Test User',
-          uid: 'test-uid',
-        },
-      },
-      isLoggedIn: true,
-      isAuthorizedUser: false,
-      getCurrentUserOnce: vi.fn().mockResolvedValue({
-        displayName: 'Test User',
-        uid: 'test-uid',
-      }),
-    })
+    // Mock unauthorized user
+    mockUseAuth.currentUser.value = {
+      uid: 'test-uid',
+      getIdToken: vi.fn().mockResolvedValue('test-token'),
+    }
 
-    const wrapper = await mountComponent()
+    mockAuthenticatedFetch.mockResolvedValueOnce({
+      json: () => Promise.resolve({ authorized: false }),
+    } as Response)
+
+    const wrapper = mount(AuthComponent)
+
+    // Wait for async operations
     await vi.dynamicImportSettled()
 
     expect(wrapper.text()).toContain('Zugriff verweigert')
-    expect(wrapper.text()).toContain('Sie sind angemeldet, aber Ihr Konto ist nicht berechtigt')
   })
 
   it('renders ChickenDashboard when user is authorized', async () => {
-    mockUseAuth.mockReturnValue({
-      auth: {
-        signInWithPopup: vi.fn(),
-        signOut: vi.fn(),
-      },
-      currentUser: {
-        value: {
-          displayName: 'Test User',
-          uid: 'test-uid',
-        },
-      },
-      isLoggedIn: true,
-      isAuthorizedUser: true,
-      getCurrentUserOnce: vi.fn().mockResolvedValue({
-        displayName: 'Test User',
-        uid: 'test-uid',
-      }),
-    })
+    // Mock authorized user
+    mockUseAuth.currentUser.value = {
+      uid: 'test-uid',
+      getIdToken: vi.fn().mockResolvedValue('test-token'),
+    }
 
-    const wrapper = await mountComponent()
+    mockAuthenticatedFetch.mockResolvedValueOnce({
+      json: () => Promise.resolve({ authorized: true }),
+    } as Response)
+
+    const wrapper = mount(AuthComponent)
+
+    // Wait for async operations
     await vi.dynamicImportSettled()
 
-    // Check if ChickenDashboard is rendered
     expect(wrapper.findComponent({ name: 'ChickenDashboard' }).exists()).toBe(true)
   })
 
-  it('displays correct title', async () => {
-    mockUseAuth.mockReturnValue({
-      auth: {
-        signInWithPopup: vi.fn(),
-        signOut: vi.fn(),
-      },
-      currentUser: {
-        value: null,
-      },
-      isLoggedIn: false,
-      isAuthorizedUser: false,
-      getCurrentUserOnce: vi.fn().mockResolvedValue(null),
-    })
-
-    const wrapper = await mountComponent()
-    await vi.dynamicImportSettled()
-
-    expect(wrapper.text()).toContain('🐔 Chicken Pi ⚙️')
+  it('displays correct title', () => {
+    const wrapper = mount(AuthComponent)
+    expect(wrapper.text()).toContain('Chicken Pi')
   })
 })

@@ -1,8 +1,8 @@
 // src/composables/useAuth.ts
-import { computed, inject, watch } from 'vue'
-import { useFirebaseAuth, useCurrentUser, useDatabaseObject } from 'vuefire'
+import { computed, watch } from 'vue'
+import { useCurrentUser, useDatabaseObject } from 'vuefire'
 import { ref as dbRef } from 'firebase/database'
-import { getAuth, type Auth, type User } from 'firebase/auth'
+import { getAuth, type User } from 'firebase/auth'
 import { getDatabase } from 'firebase/database'
 import { firebaseApp } from '../firebase'
 
