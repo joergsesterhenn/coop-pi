@@ -36,11 +36,13 @@
 <script setup lang="ts">
 import { authenticatedFetch } from '@/auth'
 import { onMounted, ref } from 'vue'
-
+import { useAuth } from '@/composables/useAuth'
+const { currentUser } = useAuth()
 const temp = ref({ inside: 0, outside: 0 })
 async function fetchTemperature() {
-  const res = await authenticatedFetch<Response>('/temperature')
-  const data = await res.json()
+  const token = await currentUser.value?.getIdToken()
+  if (!token) throw new Error('User not authenticated')
+  const data = await authenticatedFetch<Response>('/temperature', token)
   temp.value = {
     inside: data.inside ?? 0,
     outside: data.outside ?? 0,
