@@ -34,14 +34,15 @@
   </v-card>
 </template>
 <script setup lang="ts">
+import { authenticatedFetch } from '@/auth'
 import { onMounted, ref } from 'vue'
-
+import { useAuth } from '@/composables/useAuth'
+const { currentUser } = useAuth()
 const temp = ref({ inside: 0, outside: 0 })
-const apiBaseUrl: string = import.meta.env.VITE_API_BASE_URL
-
 async function fetchTemperature() {
-  const res = await fetch(`${apiBaseUrl}/temperature`)
-  const data = await res.json()
+  const token = await currentUser.value?.getIdToken()
+  if (!token) throw new Error('User not authenticated')
+  const data = await authenticatedFetch<{ inside: number; outside: number }>('/temperature', token)
   temp.value = {
     inside: data.inside ?? 0,
     outside: data.outside ?? 0,
