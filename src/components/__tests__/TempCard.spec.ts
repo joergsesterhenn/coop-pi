@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import TempCard from '../TempCard.vue'
+import { vuetify } from '@/mocks/setup'
 
 // Mock useAuth
 vi.mock('@/composables/useAuth', () => ({
@@ -17,7 +18,6 @@ vi.mock('@/composables/useAuth', () => ({
 // Mock authenticatedFetch and BASE_BACKEND_URL
 vi.mock('../../auth', () => ({
   authenticatedFetch: vi.fn(),
-  BASE_BACKEND_URL: 'http://localhost:3000',
 }))
 
 // Mock setInterval and clearInterval
@@ -40,8 +40,9 @@ describe('TempCard', () => {
     mockClearInterval = global.clearInterval as ReturnType<typeof vi.fn>
 
     mockAuthenticatedFetch.mockResolvedValue({
-      json: () => Promise.resolve({ inside: 25, outside: 15 }),
-    } as Response)
+      inside: 25,
+      outside: 15,
+    })
   })
 
   afterEach(() => {
@@ -49,38 +50,46 @@ describe('TempCard', () => {
     vi.clearAllMocks()
   })
 
+  const mountComponent = () => {
+    return mount(TempCard, {
+      global: {
+        plugins: [vuetify],
+      },
+    })
+  }
+
   it('renders the component with correct title', () => {
-    const wrapper = mount(TempCard)
+    const wrapper = mountComponent()
     expect(wrapper.text()).toContain('Temperatur')
   })
 
   it('displays inside temperature section', () => {
-    const wrapper = mount(TempCard)
+    const wrapper = mountComponent()
     expect(wrapper.text()).toContain('Innen')
   })
 
   it('displays outside temperature section', () => {
-    const wrapper = mount(TempCard)
+    const wrapper = mountComponent()
     expect(wrapper.text()).toContain('Aussen')
   })
 
   it('shows initial temperature values', () => {
-    const wrapper = mount(TempCard)
+    const wrapper = mountComponent()
     expect(wrapper.text()).toContain('0°C')
   })
 
   it('fetches temperature data on mount', async () => {
-    mount(TempCard)
+    mountComponent()
 
     // Wait for component to mount and fetch
     await vi.dynamicImportSettled()
 
     // Verify authenticatedFetch was called
-    expect(mockAuthenticatedFetch).toHaveBeenCalledWith('/temperature')
+    expect(mockAuthenticatedFetch).toHaveBeenCalledWith('/temperature', 'test-token')
   })
 
   it('updates temperature display after fetching data', async () => {
-    const wrapper = mount(TempCard)
+    const wrapper = mountComponent()
 
     // Wait for async operations
     await vi.dynamicImportSettled()
@@ -95,7 +104,7 @@ describe('TempCard', () => {
       json: () => Promise.resolve({}),
     } as Response)
 
-    const wrapper = mount(TempCard)
+    const wrapper = mountComponent()
 
     // Wait for async operations
     await vi.dynamicImportSettled()
@@ -105,7 +114,7 @@ describe('TempCard', () => {
   })
 
   it('sets up interval for temperature updates', async () => {
-    mount(TempCard)
+    mountComponent()
 
     // Wait for component to mount
     await vi.dynamicImportSettled()
@@ -118,7 +127,7 @@ describe('TempCard', () => {
   })
 
   it('displays temperature in progress circular components', () => {
-    const wrapper = mount(TempCard)
+    const wrapper = mountComponent()
 
     // Check for progress circular components
     const progressCirculars = wrapper.findAll('.v-progress-circular')
@@ -134,7 +143,7 @@ describe('TempCard', () => {
       json: () => Promise.resolve({ error: 'API Error' }),
     } as Response)
 
-    const wrapper = mount(TempCard)
+    const wrapper = mountComponent()
 
     // Wait for async operations
     await vi.dynamicImportSettled()

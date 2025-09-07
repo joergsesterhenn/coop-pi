@@ -35,7 +35,7 @@ async function toggleLight() {
   try {
     const token = await currentUser.value?.getIdToken()
     if (!token) throw new Error('User not authenticated')
-    await authenticatedFetch('/lights', token, { method: 'POST' })
+    await authenticatedFetch('/light', token, { method: 'POST' })
     await fetchLightState()
   } catch (e) {
     console.error('Toggle failed:', e)
@@ -48,8 +48,8 @@ async function fetchLightState() {
   try {
     const token = await currentUser.value?.getIdToken()
     if (!token) throw new Error('User not authenticated')
-    const data = await authenticatedFetch<{ on: boolean }>('/light-state', token)
-    lightOn.value = data.on
+    const data = await authenticatedFetch<{ status: number }>('/light/state', token)
+    lightOn.value = data.status === 1
   } catch (e) {
     console.error('Failed to fetch light state:', e)
     lightOn.value = undefined

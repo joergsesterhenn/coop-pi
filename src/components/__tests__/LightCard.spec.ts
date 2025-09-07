@@ -41,14 +41,14 @@ describe('LightCard', () => {
   }
 
   it('fetches and displays the initial light state as On', async () => {
-    server.use(http.get('*/light-state', () => HttpResponse.json({ on: true })))
+    server.use(http.get('*/light/state', () => HttpResponse.json({ status: 1 })))
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht an')
   })
 
   it('fetches and displays the initial light state as Off', async () => {
-    server.use(http.get('*/light-state', () => HttpResponse.json({ on: false })))
+    server.use(http.get('*/light/state', () => HttpResponse.json({ status: 0 })))
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht aus')
@@ -56,7 +56,7 @@ describe('LightCard', () => {
 
   it('toggles the light from Off to On', async () => {
     // Set up initial state handler
-    server.use(http.get('*/light-state', () => HttpResponse.json({ on: false })))
+    server.use(http.get('*/light/state', () => HttpResponse.json({ status: 0 })))
 
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
@@ -64,8 +64,8 @@ describe('LightCard', () => {
 
     // Set up toggle response handlers BEFORE clicking
     server.use(
-      http.post('*/lights', () => HttpResponse.json({ success: true })),
-      http.get('*/light-state', () => HttpResponse.json({ on: true })),
+      http.post('*/light', () => HttpResponse.json({ status: 1 })),
+      http.get('*/light/state', () => HttpResponse.json({ status: 1 })),
     )
 
     // Click the switch
@@ -86,7 +86,7 @@ describe('LightCard', () => {
 
   it('toggles the light from On to Off', async () => {
     // Set up initial state handler
-    server.use(http.get('*/light-state', () => HttpResponse.json({ on: true })))
+    server.use(http.get('*/light/state', () => HttpResponse.json({ status: 1 })))
 
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
@@ -94,8 +94,8 @@ describe('LightCard', () => {
 
     // Set up toggle response handlers BEFORE clicking
     server.use(
-      http.post('*/lights', () => HttpResponse.json({ success: true })),
-      http.get('*/light-state', () => HttpResponse.json({ on: false })),
+      http.post('*/light', () => HttpResponse.json({ status: 0 })),
+      http.get('*/light/state', () => HttpResponse.json({ status: 0 })),
     )
 
     // Click the switch
@@ -113,7 +113,7 @@ describe('LightCard', () => {
 
   it('handles API error during initial fetch and does not render switch', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    server.use(http.get('*/light-state', () => new HttpResponse(null, { status: 500 })))
+    server.use(http.get('*/light/state', () => new HttpResponse(null, { status: 500 })))
 
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
@@ -125,14 +125,14 @@ describe('LightCard', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     // Set up initial state handler
-    server.use(http.get('*/light-state', () => HttpResponse.json({ on: false })))
+    server.use(http.get('*/light/state', () => HttpResponse.json({ status: 0 })))
 
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
     expect(wrapper.find('.v-switch .v-label').text()).toBe('Licht aus')
 
     // Set up error handler for the toggle request
-    server.use(http.post('*/lights', () => new HttpResponse(null, { status: 500 })))
+    server.use(http.post('*/light', () => new HttpResponse(null, { status: 500 })))
 
     // Click the switch
     await wrapper.find('.v-switch input').trigger('click')

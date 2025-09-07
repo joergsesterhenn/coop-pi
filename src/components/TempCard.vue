@@ -42,7 +42,7 @@ const temp = ref({ inside: 0, outside: 0 })
 async function fetchTemperature() {
   const token = await currentUser.value?.getIdToken()
   if (!token) throw new Error('User not authenticated')
-  const data = await authenticatedFetch<Response>('/temperature', token)
+  const data = await authenticatedFetch<{ inside: number; outside: number }>('/temperature', token)
   temp.value = {
     inside: data.inside ?? 0,
     outside: data.outside ?? 0,

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { server } from '../../mocks/server'
 import { http, HttpResponse } from 'msw'
 import { vuetify } from '../../mocks/setup'
@@ -51,7 +51,7 @@ describe('ImageCaptureCard', () => {
   it('shows loading state on capture button when capturing', async () => {
     // Mock slow response to trigger loading state
     server.use(
-      http.post('/capture', () => {
+      http.post('/image', () => {
         return new Promise((resolve) =>
           setTimeout(() => resolve(HttpResponse.json({ success: true })), 100),
         )
@@ -72,7 +72,7 @@ describe('ImageCaptureCard', () => {
   it('displays image when imageUrl is set', async () => {
     // Mock successful image fetch
     server.use(
-      http.get('/latest-image', () => {
+      http.get('/image', () => {
         return HttpResponse.json({ imageUrl: 'test-image.jpg' })
       }),
     )
@@ -84,10 +84,10 @@ describe('ImageCaptureCard', () => {
     expect(wrapper.find('img').exists()).toBe(true)
   })
 
-  it('does not display image when imageUrl is empty', async () => {
+  it('does display placeholder image when imageUrl is empty', async () => {
     // Mock empty image response
     server.use(
-      http.get('/latest-image', () => {
+      http.get('/image', () => {
         return HttpResponse.json({})
       }),
     )
@@ -95,29 +95,28 @@ describe('ImageCaptureCard', () => {
     const wrapper = await mountComponent()
     await vi.dynamicImportSettled()
 
-    // Check that no image is displayed initially
-    expect(wrapper.find('img').exists()).toBe(false)
+    expect(wrapper.find('img').attributes().src).toBe('/src/no-image.webp')
   })
 
   it('fetches image on mount', async () => {
     // Mock the image fetch
     server.use(
-      http.get('/latest-image', () => {
+      http.get('/image', () => {
         return HttpResponse.json({ imageUrl: 'test-image.jpg' })
       }),
     )
 
-    mount(ImageCaptureCard)
+    const wrapper = await mount(ImageCaptureCard)
     await vi.dynamicImportSettled()
 
     // Component should render without errors
-    expect(true).toBe(true)
+    expect(wrapper.find('img').attributes().src).toBe('test-image.jpg')
   })
 
   it('handles capture image button click', async () => {
     // Mock successful capture
     server.use(
-      http.post('/capture', () => {
+      http.post('/image', () => {
         return HttpResponse.json({ success: true })
       }),
     )
@@ -139,7 +138,7 @@ describe('ImageCaptureCard', () => {
   it('updates image after capture', async () => {
     // Mock successful capture response
     server.use(
-      http.post('/capture', () => {
+      http.post('/image', () => {
         return HttpResponse.json({ success: true })
       }),
     )
@@ -161,7 +160,7 @@ describe('ImageCaptureCard', () => {
   it('sets loading state during capture', async () => {
     // Mock slow response
     server.use(
-      http.post('/capture', () => {
+      http.post('/image', () => {
         return new Promise((resolve) =>
           setTimeout(() => resolve(HttpResponse.json({ success: true })), 100),
         )

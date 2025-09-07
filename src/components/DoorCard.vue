@@ -10,7 +10,9 @@
         </v-btn>
       </v-col>
       <v-col>
-        <div class="text-body-1 font-weight-medium" data-testid="door-status-text">{{ doorStatusText }}</div>
+        <div class="text-body-1 font-weight-medium" data-testid="door-status-text">
+          {{ doorStatusText }}
+        </div>
       </v-col>
       <v-col>
         <v-btn color="blue" @click="moveDoor('down')" :disabled="closed" class="fade-button">
@@ -44,7 +46,7 @@ async function fetchDoorState() {
       return
     }
     const token = await currentUser.value.getIdToken()
-    const data = await authenticatedFetch<{ status: number }>('/door-state', token)
+    const data = await authenticatedFetch<{ status: number }>('/door/state', token)
     doorStatus.value = data.status
   } catch (err) {
     console.error('Fehler beim Abrufen des Türstatus:', err)
@@ -52,7 +54,7 @@ async function fetchDoorState() {
   }
 }
 
-setInterval(fetchDoorState, 2000)
+setInterval(fetchDoorState, 5000)
 
 onMounted(() => {
   fetchDoorState()

@@ -26,7 +26,7 @@
         </v-img>
         <v-img
           v-else
-          src="imgUrl"
+          :src="noImage"
           aspect-ratio="4/3"
           cover
           class="elevation-3"
@@ -49,7 +49,7 @@ async function fetchImage() {
   try {
     const token = await currentUser.value?.getIdToken()
     if (!token) throw new Error('User not authenticated')
-    const data = await authenticatedFetch<{ imageUrl: string }>(`/latest-image`, token, {
+    const data = await authenticatedFetch<{ imageUrl: string }>(`/image`, token, {
       method: 'GET',
     })
     if (data.imageUrl) {
@@ -65,7 +65,7 @@ async function captureImage() {
   captureLoading.value = true
   const token = await currentUser.value?.getIdToken()
   if (!token) throw new Error('User not authenticated')
-  await authenticatedFetch<Response>('/capture', token, { method: 'POST' })
+  await authenticatedFetch<Response>('/image', token, { method: 'POST' })
   await fetchImage()
   captureLoading.value = false
 }

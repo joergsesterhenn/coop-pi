@@ -18,7 +18,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Door" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -31,53 +31,70 @@
         }
       }
     },
-    "/door-state": {
+    "/door/state": {
       "get": {
         "summary": "Door State",
         "operationId": "door_state_door_state_get",
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Door" } } }
           }
         },
         "security": [{ "HTTPBearer": [] }]
       }
     },
-    "/lights": {
+    "/light": {
       "post": {
         "summary": "Lights",
-        "operationId": "lights_lights_post",
+        "operationId": "lights_light_post",
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Light" } }
+            }
           }
         },
         "security": [{ "HTTPBearer": [] }]
       }
     },
-    "/light-state": {
+    "/light/state": {
       "get": {
         "summary": "Light State",
         "operationId": "light_state_light_state_get",
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Light" } }
+            }
           }
         },
         "security": [{ "HTTPBearer": [] }]
       }
     },
-    "/capture": {
-      "post": {
-        "summary": "Capture Image",
-        "operationId": "capture_image_capture_post",
+    "/image": {
+      "get": {
+        "summary": "Latest Image",
+        "operationId": "latest_image_image_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": {} } }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      },
+      "post": {
+        "summary": "Capture Image",
+        "operationId": "capture_image_image_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ImageStatus" } }
+            }
           }
         },
         "security": [{ "HTTPBearer": [] }]
@@ -90,20 +107,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
-          }
-        },
-        "security": [{ "HTTPBearer": [] }]
-      }
-    },
-    "/latest-image": {
-      "get": {
-        "summary": "Latest Image",
-        "operationId": "latest_image_latest_image_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": {} } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Temperature" } }
+            }
           }
         },
         "security": [{ "HTTPBearer": [] }]
@@ -112,6 +118,13 @@
   },
   "components": {
     "schemas": {
+      "Door": {
+        "properties": { "status": { "$ref": "#/components/schemas/DoorState" } },
+        "type": "object",
+        "required": ["status"],
+        "title": "Door"
+      },
+      "DoorState": { "type": "integer", "enum": [0, 1, 2, 3, 4], "title": "DoorState" },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -122,6 +135,31 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImageStatus": {
+        "properties": {
+          "status": { "type": "string", "title": "Status" },
+          "filename": { "type": "string", "title": "Filename" }
+        },
+        "type": "object",
+        "required": ["status", "filename"],
+        "title": "ImageStatus"
+      },
+      "Light": {
+        "properties": { "status": { "$ref": "#/components/schemas/LightState" } },
+        "type": "object",
+        "required": ["status"],
+        "title": "Light"
+      },
+      "LightState": { "type": "integer", "enum": [0, 1, 2], "title": "LightState" },
+      "Temperature": {
+        "properties": {
+          "inside": { "type": "number", "title": "Inside" },
+          "outside": { "type": "number", "title": "Outside" }
+        },
+        "type": "object",
+        "required": ["inside", "outside"],
+        "title": "Temperature"
       },
       "ValidationError": {
         "properties": {
