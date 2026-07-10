@@ -15,7 +15,6 @@
           cover
           class="elevation-3"
           style="max-height: 300px"
-          crossorigin="use-credentials"
         >
           <template #placeholder>
             <div class="d-flex align-center justify-center fill-height">
@@ -38,29 +37,21 @@ const { currentUser } = useAuth()
 const imageUrl = ref('')
 const captureLoading = ref(false)
 
+interface ChickenImageResponse {
+  image: string
+  media_type: string
+}
+
 async function fetchImage() {
   try {
     const token = await currentUser.value?.getIdToken()
     if (!token) throw new Error('User not authenticated')
 
-    // The backend returns the image file directly, so we fetch it as a blob
-    // and create an object URL to display it.
-    const response = await authenticatedFetch<Response>(`/image`, token, {
+    const data = await authenticatedFetch<ChickenImageResponse>('/image', token, {
       method: 'GET',
     })
 
-    if (!response.ok) {
-      throw new Error(`Image fetch failed with status: ${response.status}`)
-    }
-
-    const imageBlob = await response.blob()
-
-    // Revoke the old object URL to avoid memory leaks
-    if (imageUrl.value && imageUrl.value.startsWith('blob:')) {
-      URL.revokeObjectURL(imageUrl.value)
-    }
-
-    imageUrl.value = URL.createObjectURL(imageBlob)
+    imageUrl.value = `data:${data.media_type};base64,${data.image}`
   } catch (error) {
     console.error('Failed to fetch image:', error)
     imageUrl.value = noImage
