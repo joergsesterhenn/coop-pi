@@ -30,9 +30,9 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { authenticatedFetch } from '../../auth'
-import noImage from '../../assets/no-image.jpg'
-import { useAuth } from '../../composables/useAuth'
+import { authenticatedFetch } from '@/auth'
+import noImage from '@/assets/no-image.jpg'
+import { useAuth } from '@/composables/useAuth'
 
 const { currentUser } = useAuth()
 const imageUrl = ref('')
