@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { authenticatedFetch } from '@/auth'
-import noImage from '@/assets/no-image.jpg'
+import noImage from '@/no-image.webp'
 import { useAuth } from '@/composables/useAuth'
 
 const { currentUser } = useAuth()
