@@ -59,7 +59,7 @@ async function startStream() {
     if (!token) throw new Error("User nicht authentifiziert");
 
     // 2. Erstelle die URL und hänge das Token als Query-Parameter an.
-    streamUrl.value = `${baseUrl}/stream?token=${encodeURIComponent(token)}`;
+    streamUrl.value = `${BASE_BACKEND_URL}/stream?token=${encodeURIComponent(token)}`;
   } catch (error) {
     console.error("Stream konnte nicht gestartet werden:", error);
     streamUrl.value = "";
